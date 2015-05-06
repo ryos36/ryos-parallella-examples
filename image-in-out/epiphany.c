@@ -1,8 +1,6 @@
 #include "e_lib.h"
 #include "shared_data.h"
 
-//#define BUF_ADDRESS 0x8f000000
-
 //static uint8_t cache[16384];
 
 int main(void)
@@ -10,6 +8,8 @@ int main(void)
     e_coreid_t coreid;
     uint32_t *startp, *endp;
     uint8_t *resultp;
+    volatile uint32_t *done = (uint32_t *)(STATUS_ADDRESS + 8);
+    volatile uint32_t *lock = (uint32_t *)(STATUS_ADDRESS + 12);
 
     unsigned int row, col, core, cores;
 
@@ -21,7 +21,7 @@ int main(void)
 
     unsigned int frame = 1;
 
-    volatile msg_block_t *msg = (msg_block_t *)BUF_ADDRESS;
+    volatile msg_block_t *msg = (msg_block_t *)COMMINUCATION_ADDRESS;
     volatile uint32_t *h2dp;
 
     unsigned int i = 0;
@@ -30,10 +30,14 @@ int main(void)
         endp = startp + 16384;
         resultp = (uint8_t *)(msg->msg[core].result_addr);
 
-#if 0
-        startp = (uint32_t *)0x8e000000;
-        resultp = (uint8_t *)0x8e100000;
-#endif
+#define IMAGE_SIZE    0x00100000
+        if ( startp != (uint32_t *)(IMAGE_ADDRESS + (512 * 512 * 4 / ( ROWS * COLS )) * core)) {
+            goto error;
+        }
+        if ( resultp != (uint8_t *)(RESULT_ADDRESS + (512 * 512 / ( ROWS * COLS )) * core)) {
+            goto error;
+        }
+
         if ( startp == (uint32_t *)0x8e000000 ) {
             msg->msg[core].d2h |= 0x400;
         } else {
@@ -68,15 +72,10 @@ int main(void)
 
             *h2dp = 0;
             msg->msg[core].d2h |= 1;
-
-            while ( msg->msg[core].h2d == 0 ) {
-                if ( *h2dp != 0 ) {
-                    break;
-                }
-                // wait
-            }
-            *h2dp = 0;
         }
+    
+        *done |= 1 << core;
+error:
         msg->msg[core].d2h = 4;
     }
     return 0;

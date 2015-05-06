@@ -4,10 +4,21 @@
 #define COLS 4
 
 #define IMAGE_ADDRESS 0x8e000000
-#define BUF_ADDRESS 0x8f000000
+#define RESULT_ADDRESS 0x8e100000
+#define COMMINUCATION_ADDRESS 0x8f001000
+#define STATUS_ADDRESS 0x8f000000
 
 #define MAX_CORE_N 16
 #define ALIGN8 8
+
+typedef struct __attribute__((aligned(ALIGN8)))
+{
+    uint32_t status;
+    uint32_t errno;
+    uint32_t done;
+
+    uint32_t lock;
+} status_t;
 
 typedef struct __attribute__((aligned(ALIGN8)))
 {

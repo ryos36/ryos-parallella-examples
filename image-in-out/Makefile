@@ -6,11 +6,12 @@ EXES=host epiphany.srec
 OBJS=epiphany.elf
 CXXFLAGS=-O2 -I $(EINCS)
 CXXFLAGS=-O0 -ggdb -I $(EINCS)
+CXXFLAGS=-O3 -I $(EINCS)
 
 all: $(EXES)
 
 host: host.o
-	gcc -O0 -gdb host.o -o host -I $(EINCS) -L $(ELIBS) -le-hal -lrt -lIL
+	gcc $(CXXFLAGS) -gdb host.o -o host -L $(ELIBS) -le-hal -lrt -lIL
 
 host.o: host.cpp shared_data.h
 
